@@ -3,7 +3,7 @@ const util = require('util');
 const _ = require('lodash');
 
 module.exports = class WebpackConfigDumpPlugin {
-    constructor(options) {
+    constructor(options = {}) {
         this.outputPath = options.outputPath ? options.outputPath : './';
         this.name = options.name ? options.name : 'webpack.config.dump';
         this.depth = options.depth ? options.depth : 4;
