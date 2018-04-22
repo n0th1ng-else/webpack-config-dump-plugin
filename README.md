@@ -1,0 +1,1 @@
+# webpack-config-dump-plugin
