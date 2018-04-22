@@ -1,0 +1,28 @@
+{
+  "name": "webpack-config-dump-plugin",
+  "description": "A webpack plugin to cache compiled webpack config on the file system",
+  "version": "1.0.0",
+  "author": "Sergey Nikitin",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "homepage": "https://github.com/n-srg/webpack-config-dump-plugin#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/n-srg/webpack-config-dump-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/n-srg/webpack-config-dump-plugin/issues"
+  },
+  "keywords": [
+    "webpack",
+    "plugin",
+    "dump",
+    "config"
+  ],
+  "dependencies": {
+    "lodash": "4.17.5"
+  }
+}
