@@ -57,6 +57,10 @@ module.exports = class WebpackConfigDumpPlugin {
             return !_.isEmpty(formattedLevel) ? formattedLevel : undefined;
         }
 
+        if (_.isRegExp(subCfg)) {
+            return subCfg;
+        }
+
         if (_.isObject(subCfg)) {
             return _.transform(
                 subCfg,
