@@ -1,6 +1,9 @@
 const fs = require('fs');
 const util = require('util');
 const _ = require('lodash');
+const weblog = require('webpack-log');
+
+const log = weblog({ name: 'wcd' });
 
 module.exports = class WebpackConfigDumpPlugin {
     constructor(options = {}) {
@@ -18,7 +21,7 @@ module.exports = class WebpackConfigDumpPlugin {
             try {
                 fs.mkdirSync(this.outputPath);
             } catch (err) {
-                console.log('Could not create cache folder:', err);
+	            log.warn('Could not create cache folder:', err);
                 return;
             }
         }
@@ -26,7 +29,7 @@ module.exports = class WebpackConfigDumpPlugin {
         try {
             fs.writeFileSync(`${this.outputPath}/${this.name}`, `module.exports = () => (${dump})`);
         } catch (err) {
-            console.log('Could not create dump file:', err);
+	        log.warn('Could not create dump file:', err);
         }
     }
 
