@@ -1,7 +1,7 @@
 {
   "name": "webpack-config-dump-plugin",
   "description": "A webpack plugin to cache compiled webpack config on the file system",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "author": "Sergey Nikitin",
   "license": "MIT",
   "main": "index.js",
@@ -23,6 +23,7 @@
     "config"
   ],
   "dependencies": {
-    "lodash": "4.17.5"
+    "lodash": "4.17.11",
+    "webpack-log": "2.0.0"
   }
 }
