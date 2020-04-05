@@ -1,6 +1,11 @@
 const fs = require('fs');
 const util = require('util');
-const _ = require('lodash');
+const isEmpty = require('lodash').isEmpty;
+const isFunction = require('lodash').isFunction;
+const isArray = require('lodash').isArray;
+const isRegExp = require('lodash').isRegExp;
+const isObject = require('lodash').isObject;
+const transform = require('lodash').transform;
 const weblog = require('webpack-log');
 
 const log = weblog({ name: 'wcd' });
@@ -42,12 +47,12 @@ module.exports = class WebpackConfigDumpPlugin {
             return;
         }
 
-        if (_.isFunction(subCfg)) {
+        if (isFunction(subCfg)) {
             return;
         }
 
-        if (_.isArray(subCfg)) {
-            const formattedLevel = _.transform(
+        if (isArray(subCfg)) {
+            const formattedLevel = transform(
                 subCfg,
                 (result, item) => {
                     const value = this._simplifyLevel(item, currentDepth + 1, depth);
@@ -57,15 +62,15 @@ module.exports = class WebpackConfigDumpPlugin {
                 },
                 []
             );
-            return !_.isEmpty(formattedLevel) ? formattedLevel : undefined;
+            return !isEmpty(formattedLevel) ? formattedLevel : undefined;
         }
 
-        if (_.isRegExp(subCfg)) {
+        if (isRegExp(subCfg)) {
             return subCfg;
         }
 
-        if (_.isObject(subCfg)) {
-            return _.transform(
+        if (isObject(subCfg)) {
+            return transform(
                 subCfg,
                 (result, item, key) => {
                     const value = this._simplifyLevel(item, currentDepth + 1, depth);
