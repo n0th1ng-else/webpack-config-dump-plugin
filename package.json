@@ -1,10 +1,11 @@
 {
   "name": "webpack-config-dump-plugin",
   "description": "A webpack plugin to cache compiled webpack config on the file system",
-  "version": "1.0.7",
+  "version": "2.0.0",
   "author": "Sergey Nikitin <srg.post@gmail.com>",
   "license": "MIT",
-  "main": "index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "homepage": "https://github.com/n0th1ng-else/webpack-config-dump-plugin#readme",
   "repository": {
     "type": "git",
@@ -19,8 +20,30 @@
     "dump",
     "config"
   ],
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "dependencies": {
-    "lodash": "4.17.15",
-    "webpack-log": "3.0.1"
+    "lodash": "^4.17.15",
+    "webpack-log": "^3.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "14.0.11",
+    "@types/webpack": "4.41.17",
+    "@types/lodash": "4.14.155",
+    "@types/jest": "25.2.3",
+    "ts-jest": "26.1.0",
+    "typescript": "3.9.5",
+    "prettier": "2.0.5",
+    "jest": "26.0.1"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "build": "tsc",
+    "test": "jest",
+    "coverage": "jest --collect-coverage",
+    "test:watch": "jest --watch --silent=false"
   }
 }
