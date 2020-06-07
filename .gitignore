@@ -23,3 +23,6 @@ dist
 .settings*
 .nvmrc
 .vscode
+coverage
+package-lock.json
+
