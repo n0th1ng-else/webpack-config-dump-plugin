@@ -19,7 +19,7 @@ npm i webpack-config-dump-plugin --save-dev
 ## Usage
 
 ```js
-const WebpackConfigDumpPlugin = require("webpack-config-dump-plugin");
+const { WebpackConfigDumpPlugin } = require("webpack-config-dump-plugin");
 
 // webpack config
 {
