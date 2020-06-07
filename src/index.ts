@@ -1,4 +1,3 @@
-import webpack from "webpack";
 import weblog from "webpack-log";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { inspect } from "util";
@@ -23,11 +22,11 @@ export class WebpackConfigDumpPlugin {
     this.depth = options.depth ? options.depth : 4;
   }
 
-  public apply(compiler: webpack.Compiler): void {
+  public apply(compiler: any): void {
     this.dumpConfig(compiler.options);
   }
 
-  public getDump(config: webpack.Configuration, depth: number): string {
+  public getDump(config: any, depth: number): string {
     return inspect(this.simplifyConfig(config, depth), { depth });
   }
 

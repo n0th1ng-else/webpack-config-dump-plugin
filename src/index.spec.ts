@@ -172,7 +172,6 @@ describe("Dump webpack config", () => {
         done();
       });
 
-      // @ts-ignore
       plugin.apply({ some: 0, test: "data", options: { mode: "development" } });
     });
   });
