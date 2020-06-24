@@ -39,17 +39,6 @@ describe("Dump webpack config", () => {
 
   describe("Init", () => {
     it("Check initial values", () => {
-      expect(plugin.depth).toBe(4);
-      expect(plugin.outputPath).toBe("./");
-      expect(plugin.name).toBe("webpack.config.dump");
-    });
-
-    it("Override initial values - depth", () => {
-      plugin = new WebpackConfigDumpPlugin({
-        depth: 2,
-      });
-
-      expect(plugin.depth).toBe(2);
       expect(plugin.outputPath).toBe("./");
       expect(plugin.name).toBe("webpack.config.dump");
     });
@@ -59,7 +48,6 @@ describe("Dump webpack config", () => {
         name: "foo.bar",
       });
 
-      expect(plugin.depth).toBe(4);
       expect(plugin.outputPath).toBe("./");
       expect(plugin.name).toBe("foo.bar");
     });
@@ -69,7 +57,6 @@ describe("Dump webpack config", () => {
         outputPath: "foo/bar/",
       });
 
-      expect(plugin.depth).toBe(4);
       expect(plugin.outputPath).toBe("foo/bar/");
       expect(plugin.name).toBe("webpack.config.dump");
     });
@@ -128,40 +115,32 @@ describe("Dump webpack config", () => {
       expect(output).toEqual({ foo: {}, bar: { test: 1 } });
     });
 
-    it("Cuts config with default depth eq to 4", () => {
-      const output = plugin.simplifyConfig({
-        foo: { bar: { oof: 20, some: { cut: { test: "nested" } } } },
-      });
-      expect(output).toEqual({ foo: { bar: { oof: 20, some: {} } } });
-    });
-
-    it("Cuts config with default depth eq to 4 for arrays", () => {
-      const output = plugin.simplifyConfig({
-        foo: [{ some: "state" }, { bar: { oof: 20 } }],
-      });
-      expect(output).toEqual({ foo: [{ some: "state" }, { bar: {} }] });
-    });
-
-    it("Cuts config with custom depth eq to 2", () => {
-      const depth = 3;
-      const output = plugin.simplifyConfig(
-        {
-          foo: { bar: { oof: 20, some: { cut: { test: "nested" } } } },
+    it("Finds circular references", () => {
+      const loop = { key: {} };
+      loop.key = loop;
+      const output = plugin.simplifyConfig({ foo: { oof: 20, loop }, });
+      expect(output).toEqual({
+        foo: {
+          oof: 20,
+          loop: {
+            key: '<<circular reference to ["foo"]["loop"]>>'
+          }
         },
-        depth
-      );
-      expect(output).toEqual({ foo: { bar: {} } });
+      });
     });
 
-    it("Cuts config with custom depth eq to 2 for arrays", () => {
-      const depth = 3;
-      const output = plugin.simplifyConfig(
-        {
-          foo: [{ some: "state" }, { bar: { oof: 20 } }],
-        },
-        depth
-      );
-      expect(output).toEqual({ foo: [{}, {}] });
+    it("Finds circular references for arrays", () => {
+      const loop = { key: {} };
+      loop.key = loop;
+      const output = plugin.simplifyConfig({
+        foo: [{ some: "state" }, { bar: loop }],
+      });
+      expect(output).toEqual({
+        foo: [
+          { some: "state" },
+          { bar: { key: '<<circular reference to ["foo"][1]["bar"]>>' } }
+        ]
+      });
     });
   });
 

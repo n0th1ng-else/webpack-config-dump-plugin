@@ -50,12 +50,7 @@ import { WebpackConfigDumpPlugin } from "webpack-config-dump-plugin";
   outputPath: './',
 
   // Config dump filename
-  name: 'webpack.config.dump',
-
-  // Config depth. Since webpack config is circulary locked,
-  // we can't dump whole config. This parameter sets how deep
-  // config dump will be stored
-  depth: 4
+  name: 'webpack.config.dump'
 
 }
 ```

@@ -8,30 +8,27 @@ const log = weblog({ name: "wcd" });
 interface PluginOptions {
   outputPath?: string;
   name?: string;
-  depth?: number;
 }
 
 export class WebpackConfigDumpPlugin {
   public readonly outputPath: string;
   public readonly name: string;
-  public readonly depth: number;
 
   constructor(options: PluginOptions = {}) {
     this.outputPath = options.outputPath ? options.outputPath : "./";
     this.name = options.name ? options.name : "webpack.config.dump";
-    this.depth = options.depth ? options.depth : 4;
   }
 
   public apply(compiler: any): void {
     this.dumpConfig(compiler.options);
   }
 
-  public getDump(config: any, depth: number): string {
-    return inspect(this.simplifyConfig(config, depth), { depth });
+  public getDump(config: any): string {
+    return inspect(this.simplifyConfig(config));
   }
 
-  public simplifyConfig(config: any, depth = 4) {
-    return this.simplifyLevel(config, 0, depth);
+  public simplifyConfig(config: any) {
+    return this.simplifyLevel(config, new Map(), '');
   }
 
   public dumpConfig(config: any): void {
@@ -44,7 +41,7 @@ export class WebpackConfigDumpPlugin {
       }
     }
 
-    const dump = this.getDump(config, this.depth);
+    const dump = this.getDump(config);
     try {
       writeFileSync(
         `${this.outputPath}/${this.name}`,
@@ -55,23 +52,29 @@ export class WebpackConfigDumpPlugin {
     }
   }
 
-  private simplifyLevel(config: any, currentDepth = 0, depth = 2) {
-    if (currentDepth === depth) {
-      return null;
-    }
+  private addLevelToMap(map: Map<any, string>, key: string, config: any) {
+    map.set(config, `<<circular reference to ${key}>>`);
+  }
 
+  private simplifyLevel(config: any, map: Map<any, string>, currentKey = '') {
     if (isFunction(config)) {
       return null;
     }
 
+    if (map.has(config)) {
+      return map.get(config);
+    }
+
     if (Array.isArray(config)) {
-      const formattedLevel = config.reduce((res, item) => {
-        const value = this.simplifyLevel(item, currentDepth + 1, depth);
+      this.addLevelToMap(map, currentKey, config);
+      const formattedLevel = config.reduce((res, item, index) => {
+        const value = this.simplifyLevel(item, map, `${currentKey}[${index}]`);
         if (value) {
           res.push(value);
         }
         return res;
       }, []);
+      map.delete(config);
       return formattedLevel.length ? formattedLevel : null;
     }
 
@@ -80,13 +83,16 @@ export class WebpackConfigDumpPlugin {
     }
 
     if (isObject(config)) {
+      this.addLevelToMap(map, currentKey, config);
       return Object.keys(config).reduce((res, key) => {
-        const value = this.simplifyLevel(config[key], currentDepth + 1, depth);
+        const newKey = `${currentKey}["${key.replace(/"/g, "\\\"")}"]`;
+        const value = this.simplifyLevel(config[key], map, newKey);
         if (value) {
           res[key] = value;
         }
         return res;
       }, {});
+      map.delete(config);
     }
 
     return config;
