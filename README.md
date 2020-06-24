@@ -3,8 +3,6 @@
 A webpack plugin to dump compiled webpack config into file system. Is useful in case
 you have resolve aliases formed dynamically and want your IDE to be able to handle them.
 
-**Note that functions will be excluded from the final dump**.
-
 #### For typescript config file you can use [webpack-typescript-config-dump-plugin](https://www.npmjs.com/package/webpack-typescript-config-dump-plugin)
 
 ### In version 2 the plugin has been rewritten using Typescript language. Now it needs to be imported as ES module (check the installation guide for details)

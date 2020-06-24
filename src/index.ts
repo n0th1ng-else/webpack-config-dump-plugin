@@ -58,7 +58,10 @@ export class WebpackConfigDumpPlugin {
 
   private simplifyLevel(config: any, map: Map<any, string>, currentKey = '') {
     if (isFunction(config)) {
-      return null;
+      if (config.name) {
+        return `[Function: ${config.name}]`;
+      }
+      return "[Function]";
     }
 
     if (map.has(config)) {

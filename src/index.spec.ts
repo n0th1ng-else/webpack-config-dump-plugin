@@ -78,9 +78,9 @@ describe("Dump webpack config", () => {
       expect(output).toEqual(undefined);
     });
 
-    it("Cuts function", () => {
+    it("Keeps functions", () => {
       const output = plugin.simplifyConfig({ foo: () => {} });
-      expect(output).toEqual({});
+      expect(output).toEqual({ foo: "[Function: foo]" });
     });
 
     it("Keeps RegExp", () => {
