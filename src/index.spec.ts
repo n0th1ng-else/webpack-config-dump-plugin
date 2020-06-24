@@ -91,23 +91,27 @@ describe("Dump webpack config", () => {
       expect(output).toEqual({ foo: /foo/, bar: /bar/ });
     });
 
-    it("Keeps numbers with values", () => {
+    it("Keeps numbers", () => {
       const output = plugin.simplifyConfig({ foo: 9000, bar: 0 });
-      expect(output).toEqual({ foo: 9000 });
+      expect(output).toEqual({ foo: 9000, bar: 0 });
     });
 
-    it("Keeps strings with values", () => {
+    it("Keeps strings", () => {
       const output = plugin.simplifyConfig({ foo: "bar", bar: "" });
-      expect(output).toEqual({ foo: "bar" });
+      expect(output).toEqual({ foo: "bar", bar: "" });
     });
 
-    it("Keeps non-empty arrays", () => {
+    it("Keeps arrays", () => {
       const output = plugin.simplifyConfig({
         foo: [],
         bar: ["test"],
         some: [""],
       });
-      expect(output).toEqual({ bar: ["test"] });
+      expect(output).toEqual({
+        foo: [],
+        bar: ["test"],
+        some: [""]
+      });
     });
 
     it("Keeps nested objects", () => {

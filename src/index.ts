@@ -56,6 +56,10 @@ export class WebpackConfigDumpPlugin {
     map.set(config, `<<circular reference to ${key}>>`);
   }
 
+  private isValidConfigValue(value: any) {
+    return value !== undefined && value !== null;
+  }
+
   private simplifyLevel(config: any, map: Map<any, string>, currentKey = '') {
     if (isFunction(config)) {
       if (config.name) {
@@ -72,13 +76,13 @@ export class WebpackConfigDumpPlugin {
       this.addLevelToMap(map, currentKey, config);
       const formattedLevel = config.reduce((res, item, index) => {
         const value = this.simplifyLevel(item, map, `${currentKey}[${index}]`);
-        if (value) {
+        if (this.isValidConfigValue(value)) {
           res.push(value);
         }
         return res;
       }, []);
       map.delete(config);
-      return formattedLevel.length ? formattedLevel : null;
+      return formattedLevel;
     }
 
     if (isRegExp(config)) {
@@ -90,7 +94,7 @@ export class WebpackConfigDumpPlugin {
       return Object.keys(config).reduce((res, key) => {
         const newKey = `${currentKey}["${key.replace(/"/g, "\\\"")}"]`;
         const value = this.simplifyLevel(config[key], map, newKey);
-        if (value) {
+        if (this.isValidConfigValue(value)) {
           res[key] = value;
         }
         return res;
