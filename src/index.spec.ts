@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import weblog from "webpack-log";
 import { WebpackConfigDumpPlugin } from ".";
-// import WebpackConfigDumpPlugin from "./old";
 
 jest.mock("fs");
 jest.mock("webpack-log");
@@ -9,6 +8,10 @@ jest.mock("webpack-log");
 const logger = weblog({ name: "wcd-mock" });
 
 let plugin = new WebpackConfigDumpPlugin();
+
+let includeFalseValues: boolean = false;
+let showFunctionNames: boolean = false;
+let depth: null | number = 5;
 
 function setLogAssertionFn(
   fn: (name: string, msg?: string, err?: Error) => void
@@ -34,6 +37,9 @@ function setFileWritten(isWritten: boolean, handler): void {
 
 describe("Dump webpack config", () => {
   beforeEach(() => {
+    includeFalseValues = false;
+    showFunctionNames = false;
+    depth = 5;
     plugin = new WebpackConfigDumpPlugin();
   });
 
@@ -42,6 +48,9 @@ describe("Dump webpack config", () => {
       expect(plugin.depth).toBe(4);
       expect(plugin.outputPath).toBe("./");
       expect(plugin.name).toBe("webpack.config.dump");
+      expect(plugin.keepCircularReferences).toBe(false);
+      expect(plugin.showFunctionNames).toBe(false);
+      expect(plugin.includeFalseValues).toBe(false);
     });
 
     it("Override initial values - depth", () => {
@@ -52,6 +61,9 @@ describe("Dump webpack config", () => {
       expect(plugin.depth).toBe(2);
       expect(plugin.outputPath).toBe("./");
       expect(plugin.name).toBe("webpack.config.dump");
+      expect(plugin.keepCircularReferences).toBe(false);
+      expect(plugin.showFunctionNames).toBe(false);
+      expect(plugin.includeFalseValues).toBe(false);
     });
 
     it("Override initial values - name", () => {
@@ -62,6 +74,9 @@ describe("Dump webpack config", () => {
       expect(plugin.depth).toBe(4);
       expect(plugin.outputPath).toBe("./");
       expect(plugin.name).toBe("foo.bar");
+      expect(plugin.keepCircularReferences).toBe(false);
+      expect(plugin.showFunctionNames).toBe(false);
+      expect(plugin.includeFalseValues).toBe(false);
     });
 
     it("Override initial values - outputPath", () => {
@@ -72,96 +87,487 @@ describe("Dump webpack config", () => {
       expect(plugin.depth).toBe(4);
       expect(plugin.outputPath).toBe("foo/bar/");
       expect(plugin.name).toBe("webpack.config.dump");
+      expect(plugin.keepCircularReferences).toBe(false);
+      expect(plugin.showFunctionNames).toBe(false);
+      expect(plugin.includeFalseValues).toBe(false);
+    });
+
+    it("Override initial values - wrong depth value", (done) => {
+      try {
+        plugin = new WebpackConfigDumpPlugin({
+          depth: -12,
+        });
+        done.fail();
+      } catch (e) {
+        expect(e.message).toBe(
+          '[wcd] The "depth" option should be a positive number'
+        );
+        done();
+      }
+    });
+
+    it("Override initial values - keepCircularReferences", () => {
+      plugin = new WebpackConfigDumpPlugin({
+        keepCircularReferences: true,
+      });
+
+      expect(plugin.depth).toBe(4);
+      expect(plugin.outputPath).toBe("./");
+      expect(plugin.name).toBe("webpack.config.dump");
+      expect(plugin.keepCircularReferences).toBe(true);
+      expect(plugin.showFunctionNames).toBe(false);
+      expect(plugin.includeFalseValues).toBe(false);
+    });
+
+    it("Override initial values - showFunctionNames", () => {
+      plugin = new WebpackConfigDumpPlugin({
+        showFunctionNames: true,
+      });
+
+      expect(plugin.depth).toBe(4);
+      expect(plugin.outputPath).toBe("./");
+      expect(plugin.name).toBe("webpack.config.dump");
+      expect(plugin.keepCircularReferences).toBe(false);
+      expect(plugin.showFunctionNames).toBe(true);
+      expect(plugin.includeFalseValues).toBe(false);
+    });
+
+    it("Override initial values - includeFalseValues", () => {
+      plugin = new WebpackConfigDumpPlugin({
+        includeFalseValues: true,
+      });
+
+      expect(plugin.depth).toBe(4);
+      expect(plugin.outputPath).toBe("./");
+      expect(plugin.name).toBe("webpack.config.dump");
+      expect(plugin.keepCircularReferences).toBe(false);
+      expect(plugin.showFunctionNames).toBe(false);
+      expect(plugin.includeFalseValues).toBe(true);
     });
   });
 
   describe("Simplify config", () => {
-    it("Empty config", () => {
-      const output = plugin.simplifyConfig({});
-      expect(output).toEqual({});
-    });
-
-    it("Null config", () => {
-      const output = plugin.simplifyConfig(null);
-      expect(output).toEqual(null);
-    });
-
-    it("Undefined config", () => {
-      const output = plugin.simplifyConfig(undefined);
-      expect(output).toEqual(undefined);
-    });
-
-    it("Cuts function", () => {
-      const output = plugin.simplifyConfig({ foo: () => {} });
-      expect(output).toEqual({});
-    });
-
-    it("Keeps RegExp", () => {
-      const output = plugin.simplifyConfig({
-        foo: /foo/,
-        bar: new RegExp("bar"),
+    describe("finite depth, no includeFalseValues, no showFunctionNames", () => {
+      beforeEach(() => {
+        includeFalseValues = false;
+        showFunctionNames = false;
+        depth = 5;
       });
-      expect(output).toEqual({ foo: /foo/, bar: /bar/ });
-    });
 
-    it("Keeps numbers with values", () => {
-      const output = plugin.simplifyConfig({ foo: 9000, bar: 0 });
-      expect(output).toEqual({ foo: 9000 });
-    });
-
-    it("Keeps strings with values", () => {
-      const output = plugin.simplifyConfig({ foo: "bar", bar: "" });
-      expect(output).toEqual({ foo: "bar" });
-    });
-
-    it("Keeps non-empty arrays", () => {
-      const output = plugin.simplifyConfig({
-        foo: [],
-        bar: ["test"],
-        some: [""],
+      it("Empty config is null", () => {
+        const output = plugin.simplifyConfig(
+          {},
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
       });
-      expect(output).toEqual({ bar: ["test"] });
-    });
 
-    it("Keeps nested objects", () => {
-      const output = plugin.simplifyConfig({ foo: {}, bar: { test: 1 } });
-      expect(output).toEqual({ foo: {}, bar: { test: 1 } });
-    });
-
-    it("Cuts config with default depth eq to 4", () => {
-      const output = plugin.simplifyConfig({
-        foo: { bar: { oof: 20, some: { cut: { test: "nested" } } } },
+      it("Null config is null", () => {
+        const output = plugin.simplifyConfig(
+          null,
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
       });
-      expect(output).toEqual({ foo: { bar: { oof: 20, some: {} } } });
-    });
 
-    it("Cuts config with default depth eq to 4 for arrays", () => {
-      const output = plugin.simplifyConfig({
-        foo: [{ some: "state" }, { bar: { oof: 20 } }],
+      it("Undefined config is null", () => {
+        const output = plugin.simplifyConfig(
+          undefined,
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
       });
-      expect(output).toEqual({ foo: [{ some: "state" }, { bar: {} }] });
+
+      it("Cuts functions", () => {
+        const output = plugin.simplifyConfig(
+          { foo: () => {} },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
+      });
+
+      it("Keeps RegExp", () => {
+        const output = plugin.simplifyConfig(
+          {
+            foo: /foo/,
+            bar: new RegExp("bar"),
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: /foo/, bar: /bar/ });
+      });
+
+      it("Keeps numbers with values", () => {
+        const output = plugin.simplifyConfig(
+          { foo: 9000, bar: 0 },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: 9000 });
+      });
+
+      it("Keeps strings with values", () => {
+        const output = plugin.simplifyConfig(
+          { foo: "bar", bar: "" },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: "bar" });
+      });
+
+      it("Keeps non-empty arrays", () => {
+        const output = plugin.simplifyConfig(
+          {
+            foo: [],
+            bar: ["test"],
+            some: [""],
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ bar: ["test"] });
+      });
+
+      it("Keeps nested objects", () => {
+        const output = plugin.simplifyConfig(
+          { foo: {}, bar: { test: 1 } },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ bar: { test: 1 } });
+      });
+
+      it("Cuts config with depth eq to 3", () => {
+        const depth = 3;
+        const output = plugin.simplifyConfig(
+          {
+            foo: { bar: { oof: 20, some: { cut: { test: "nested" } } } },
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
+      });
+
+      it("Cuts config with depth eq to 3 for arrays", () => {
+        const depth = 3;
+        const output = plugin.simplifyConfig(
+          {
+            foo: [{ some: "state" }, { bar: { oof: 20 } }],
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
+      });
     });
 
-    it("Cuts config with custom depth eq to 2", () => {
-      const depth = 3;
-      const output = plugin.simplifyConfig(
-        {
-          foo: { bar: { oof: 20, some: { cut: { test: "nested" } } } },
-        },
-        depth
-      );
-      expect(output).toEqual({ foo: { bar: {} } });
+    describe("finite depth, no includeFalseValues, WITH showFunctionNames", () => {
+      beforeEach(() => {
+        showFunctionNames = true;
+      });
+
+      it("Keeps functions", () => {
+        const output = plugin.simplifyConfig(
+          { foo: () => {} },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: "<<Function 'foo'>>" });
+      });
+
+      it("Keeps functions with names", () => {
+        const output = plugin.simplifyConfig(
+          { foo: function getData() {} },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: "<<Function 'getData'>>" });
+      });
     });
 
-    it("Cuts config with custom depth eq to 2 for arrays", () => {
-      const depth = 3;
-      const output = plugin.simplifyConfig(
-        {
-          foo: [{ some: "state" }, { bar: { oof: 20 } }],
-        },
-        depth
-      );
-      expect(output).toEqual({ foo: [{}, {}] });
+    describe("finite depth, WITH includeFalseValues, no showFunctionNames", () => {
+      beforeEach(() => {
+        includeFalseValues = true;
+      });
+
+      it("Empty config is null", () => {
+        const output = plugin.simplifyConfig(
+          {},
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({});
+      });
+
+      it("Null config is null", () => {
+        const output = plugin.simplifyConfig(
+          null,
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(null);
+      });
+
+      it("Undefined config is null", () => {
+        const output = plugin.simplifyConfig(
+          undefined,
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual(undefined);
+      });
+
+      it("Keeps number 0", () => {
+        const output = plugin.simplifyConfig(
+          { foo: 9000, bar: 0 },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: 9000, bar: 0 });
+      });
+
+      it("Keeps empty strings", () => {
+        const output = plugin.simplifyConfig(
+          { foo: "bar", bar: "" },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: "bar", bar: "" });
+      });
+
+      it("Keeps empty arrays", () => {
+        const output = plugin.simplifyConfig(
+          {
+            foo: [],
+            bar: ["test"],
+            some: [""],
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({ foo: [], bar: ["test"], some: [""] });
+      });
+
+      it("Keeps empty objects", () => {
+        const output = plugin.simplifyConfig(
+          {
+            foo: {},
+            bar: {
+              count: 0,
+            },
+            some: {
+              message: "",
+            },
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({
+          foo: {},
+          bar: {
+            count: 0,
+          },
+          some: {
+            message: "",
+          },
+        });
+      });
+    });
+
+    describe("INFINITE depth, no includeFalseValues, no showFunctionNames", () => {
+      beforeEach(() => {
+        depth = null;
+      });
+
+      it("outputs the object is a circular dependency", () => {
+        const testCircular = {
+          baz: {
+            feed: "test",
+          },
+        };
+        const output = plugin.simplifyConfig(
+          {
+            foo: {},
+            bar: {
+              count: testCircular,
+            },
+            some: {
+              message: testCircular,
+              bud: "",
+            },
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({
+          bar: {
+            count: {
+              baz: {
+                feed: "test",
+              },
+            },
+          },
+          some: {
+            message: "<<Circular reference to 'config.bar.count'>>",
+          },
+        });
+      });
+
+      it("removes empty object is a circular dependency", () => {
+        const testCircular = {};
+        const output = plugin.simplifyConfig(
+          {
+            foo: {},
+            bar: {
+              count: testCircular,
+            },
+            some: {
+              message: testCircular,
+              bud: "test",
+            },
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({
+          some: {
+            bud: "test",
+          },
+        });
+      });
+
+      it("outputs the array is a circular dependency", () => {
+        const testCircular = [
+          "a",
+          {
+            baz: "two",
+          },
+          1,
+          0,
+          {},
+          { foo: "" },
+        ];
+
+        const output = plugin.simplifyConfig(
+          {
+            bar: {
+              count: [testCircular],
+            },
+            some: {
+              message: testCircular,
+            },
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({
+          bar: {
+            count: [
+              [
+                "a",
+                {
+                  baz: "two",
+                },
+                1,
+              ],
+            ],
+          },
+          some: {
+            message: "<<Circular reference to 'config.bar.count.[0]'>>",
+          },
+        });
+      });
+
+      it("removes an empty array is a circular dependency", () => {
+        const testCircular = [];
+
+        const output = plugin.simplifyConfig(
+          {
+            bar: {
+              count: [testCircular],
+            },
+            some: {
+              message: testCircular,
+            },
+            foo: "test-2",
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({
+          foo: "test-2",
+        });
+      });
+
+      it("outputs the config regardless of the depth", () => {
+        const output = plugin.simplifyConfig(
+          {
+            foo: {
+              bar: {
+                oof: 20,
+                some: {
+                  cut: {
+                    test: {
+                      nested: [
+                        {
+                          nestedAgain: "test",
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          depth,
+          includeFalseValues,
+          showFunctionNames
+        );
+        expect(output).toEqual({
+          foo: {
+            bar: {
+              oof: 20,
+              some: { cut: { test: { nested: [{ nestedAgain: "test" }] } } },
+            },
+          },
+        });
+      });
+    });
+  });
+
+  describe("INFINITE depth, WITH includeFalseValues, no showFunctionNames", () => {
+    beforeEach(() => {
+      depth = null;
     });
   });
 
