@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import weblog from "webpack-log";
+import { jest, describe, it, beforeEach, expect } from "@jest/globals";
 import { WebpackConfigDumpPlugin } from ".";
 
 jest.mock("fs");
@@ -33,6 +34,14 @@ function setDirMade(isMade: boolean): void {
 function setFileWritten(isWritten: boolean, handler): void {
   // @ts-ignore mock helper
   fs.__setFileWritten(isWritten, handler);
+}
+
+function runDone(doneFn?: (msg?: string | Error) => void, msg?: Error) {
+  if (!doneFn) {
+    throw Error("Done is not defined?!");
+  }
+
+  return msg ? doneFn(msg) : doneFn();
 }
 
 describe("Dump webpack config", () => {
@@ -97,12 +106,12 @@ describe("Dump webpack config", () => {
         plugin = new WebpackConfigDumpPlugin({
           depth: -12,
         });
-        done.fail();
+        runDone(done, new Error("wrong depth value"));
       } catch (e) {
         expect(e.message).toBe(
           '[wcd] The "depth" option should be a positive number'
         );
-        done();
+        runDone(done);
       }
     });
 
@@ -575,7 +584,7 @@ describe("Dump webpack config", () => {
     it("Only runs dump config", (done) => {
       jest.spyOn(plugin, "dumpConfig").mockImplementationOnce((data) => {
         expect(data).toEqual({ mode: "development" });
-        done();
+        runDone(done);
       });
 
       plugin.apply({ some: 0, test: "data", options: { mode: "development" } });
@@ -595,7 +604,7 @@ describe("Dump webpack config", () => {
     it("Creates file", (done) => {
       setFileWritten(true, (file: string, data: string) => {
         expect(data).toBe("module.exports = () => ({ foo: 'bar' })");
-        done();
+        runDone(done);
       });
 
       plugin.dumpConfig({ foo: "bar" });
@@ -607,7 +616,7 @@ describe("Dump webpack config", () => {
       setFileWritten(true, (file: string, data: string) => {
         expect(data).toBe("module.exports = () => ({ foo: 'bar' })");
         expect(fs.mkdirSync).not.toHaveBeenCalled();
-        done();
+        runDone(done);
       });
 
       plugin.dumpConfig({ foo: "bar" });
@@ -619,7 +628,7 @@ describe("Dump webpack config", () => {
         expect(name).toBe("wcd");
         expect(message).toBe("Could not create dump file:");
         expect(err).toBeInstanceOf(Error);
-        done();
+        runDone(done);
       });
       plugin.dumpConfig({ foo: "bar" });
     });
@@ -630,7 +639,7 @@ describe("Dump webpack config", () => {
         expect(name).toBe("wcd");
         expect(message).toBe("Could not create cache folder:");
         expect(err).toBeInstanceOf(Error);
-        done();
+        runDone(done);
       });
       plugin.dumpConfig({ foo: "bar" });
     });

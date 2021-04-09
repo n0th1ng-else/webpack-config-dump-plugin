@@ -1,4 +1,6 @@
 // old es5 module
+import { jest } from "@jest/globals";
+
 let assertionFn = jest.fn();
 
 interface Options {
@@ -10,7 +12,7 @@ module.exports = function getLoggerMock(options: Options) {
   return {
     __setAssertionFn: (fn) => (assertionFn = fn),
     warn: jest
-      .fn()
+      .fn<void, [message?: string, err?: Error]>()
       .mockImplementation((message?: string, err?: Error) =>
         assertionFn(name, message, err)
       ),
