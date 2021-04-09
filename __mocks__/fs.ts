@@ -1,3 +1,5 @@
+import { jest } from "@jest/globals";
+
 let isFileExists = false;
 let isDirMade = true;
 let isFileWritten = true;
