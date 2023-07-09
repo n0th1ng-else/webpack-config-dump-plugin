@@ -51,6 +51,10 @@ import { WebpackConfigDumpPlugin } from "webpack-config-dump-plugin";
 
 ### Changes
 
+- 3.0.2
+  Bumped dependencies. Also wildcard the lodash and webpack-log so it accepts any version change
+  from the upstream project
+
 - Version 3
   Added more flexibility, see the options section.  
   Introduced some features like `keepCircularReferences` and so forth  

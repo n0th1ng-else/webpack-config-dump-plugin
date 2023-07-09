@@ -12,9 +12,9 @@ module.exports = function getLoggerMock(options: Options) {
   return {
     __setAssertionFn: (fn) => (assertionFn = fn),
     warn: jest
-      .fn<void, [message?: string, err?: Error]>()
+      .fn<VoidFunction>()
       .mockImplementation((message?: string, err?: Error) =>
-        assertionFn(name, message, err)
+        assertionFn(name, message, err),
       ),
   };
 };
