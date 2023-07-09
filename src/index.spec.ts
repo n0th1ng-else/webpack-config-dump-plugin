@@ -15,33 +15,24 @@ let showFunctionNames: boolean = false;
 let depth: null | number = 5;
 
 function setLogAssertionFn(
-  fn: (name: string, msg?: string, err?: Error) => void
+  fn: (name: string, msg?: string, err?: Error) => void,
 ): void {
-  // @ts-ignore mock helper
   logger.__setAssertionFn(fn);
 }
 
 function setFileExists(isExists: boolean): void {
-  // @ts-ignore mock helper
+  // @ts-expect-error mock helper
   fs.__setFileExists(isExists);
 }
 
 function setDirMade(isMade: boolean): void {
-  // @ts-ignore mock helper
+  // @ts-expect-error mock helper
   fs.__setDirMade(isMade);
 }
 
 function setFileWritten(isWritten: boolean, handler): void {
-  // @ts-ignore mock helper
+  // @ts-expect-error mock helper
   fs.__setFileWritten(isWritten, handler);
-}
-
-function runDone(doneFn?: (msg?: string | Error) => void, msg?: Error) {
-  if (!doneFn) {
-    throw Error("Done is not defined?!");
-  }
-
-  return msg ? doneFn(msg) : doneFn();
 }
 
 describe("Dump webpack config", () => {
@@ -101,18 +92,12 @@ describe("Dump webpack config", () => {
       expect(plugin.includeFalseValues).toBe(false);
     });
 
-    it("Override initial values - wrong depth value", (done) => {
-      try {
+    it("Override initial values - wrong depth value", () => {
+      expect(() => {
         plugin = new WebpackConfigDumpPlugin({
           depth: -12,
         });
-        runDone(done, new Error("wrong depth value"));
-      } catch (e) {
-        expect(e.message).toBe(
-          '[wcd] The "depth" option should be a positive number'
-        );
-        runDone(done);
-      }
+      }).toThrowError('[wcd] The "depth" option should be a positive number');
     });
 
     it("Override initial values - keepCircularReferences", () => {
@@ -168,7 +153,7 @@ describe("Dump webpack config", () => {
           {},
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -178,7 +163,7 @@ describe("Dump webpack config", () => {
           null,
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -188,7 +173,7 @@ describe("Dump webpack config", () => {
           undefined,
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -198,7 +183,7 @@ describe("Dump webpack config", () => {
           { foo: () => {} },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -211,7 +196,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: /foo/, bar: /bar/ });
       });
@@ -221,7 +206,7 @@ describe("Dump webpack config", () => {
           { foo: 9000, bar: 0 },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: 9000 });
       });
@@ -231,7 +216,7 @@ describe("Dump webpack config", () => {
           { foo: "bar", bar: "" },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: "bar" });
       });
@@ -245,7 +230,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ bar: ["test"] });
       });
@@ -255,7 +240,7 @@ describe("Dump webpack config", () => {
           { foo: {}, bar: { test: 1 } },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ bar: { test: 1 } });
       });
@@ -268,7 +253,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -281,7 +266,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -297,7 +282,7 @@ describe("Dump webpack config", () => {
           { foo: () => {} },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: "<<Function 'foo'>>" });
       });
@@ -307,7 +292,7 @@ describe("Dump webpack config", () => {
           { foo: function getData() {} },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: "<<Function 'getData'>>" });
       });
@@ -323,7 +308,7 @@ describe("Dump webpack config", () => {
           {},
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({});
       });
@@ -333,7 +318,7 @@ describe("Dump webpack config", () => {
           null,
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(null);
       });
@@ -343,7 +328,7 @@ describe("Dump webpack config", () => {
           undefined,
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual(undefined);
       });
@@ -353,7 +338,7 @@ describe("Dump webpack config", () => {
           { foo: 9000, bar: 0 },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: 9000, bar: 0 });
       });
@@ -363,7 +348,7 @@ describe("Dump webpack config", () => {
           { foo: "bar", bar: "" },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: "bar", bar: "" });
       });
@@ -377,7 +362,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({ foo: [], bar: ["test"], some: [""] });
       });
@@ -395,7 +380,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({
           foo: {},
@@ -433,7 +418,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({
           bar: {
@@ -464,7 +449,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({
           some: {
@@ -496,7 +481,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({
           bar: {
@@ -531,7 +516,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({
           foo: "test-2",
@@ -560,7 +545,7 @@ describe("Dump webpack config", () => {
           },
           depth,
           includeFalseValues,
-          showFunctionNames
+          showFunctionNames,
         );
         expect(output).toEqual({
           foo: {
@@ -574,17 +559,11 @@ describe("Dump webpack config", () => {
     });
   });
 
-  describe("INFINITE depth, WITH includeFalseValues, no showFunctionNames", () => {
-    beforeEach(() => {
-      depth = null;
-    });
-  });
-
   describe("Apply plugin", () => {
     it("Only runs dump config", (done) => {
       jest.spyOn(plugin, "dumpConfig").mockImplementationOnce((data) => {
         expect(data).toEqual({ mode: "development" });
-        runDone(done);
+        done();
       });
 
       plugin.apply({ some: 0, test: "data", options: { mode: "development" } });
@@ -604,7 +583,7 @@ describe("Dump webpack config", () => {
     it("Creates file", (done) => {
       setFileWritten(true, (file: string, data: string) => {
         expect(data).toBe("module.exports = () => ({ foo: 'bar' })");
-        runDone(done);
+        done();
       });
 
       plugin.dumpConfig({ foo: "bar" });
@@ -616,7 +595,7 @@ describe("Dump webpack config", () => {
       setFileWritten(true, (file: string, data: string) => {
         expect(data).toBe("module.exports = () => ({ foo: 'bar' })");
         expect(fs.mkdirSync).not.toHaveBeenCalled();
-        runDone(done);
+        done();
       });
 
       plugin.dumpConfig({ foo: "bar" });
@@ -628,7 +607,7 @@ describe("Dump webpack config", () => {
         expect(name).toBe("wcd");
         expect(message).toBe("Could not create dump file:");
         expect(err).toBeInstanceOf(Error);
-        runDone(done);
+        done();
       });
       plugin.dumpConfig({ foo: "bar" });
     });
@@ -639,7 +618,7 @@ describe("Dump webpack config", () => {
         expect(name).toBe("wcd");
         expect(message).toBe("Could not create cache folder:");
         expect(err).toBeInstanceOf(Error);
-        runDone(done);
+        done();
       });
       plugin.dumpConfig({ foo: "bar" });
     });

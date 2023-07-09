@@ -1,7 +1,9 @@
-import weblog from "webpack-log";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { inspect } from "util";
-import { isFunction, isRegExp, isObject } from "lodash";
+import weblog from "webpack-log";
+import isFunction from "lodash/isFunction";
+import isRegExp from "lodash/isRegExp";
+import isObject from "lodash/isObject";
 
 const log = weblog({ name: "wcd" });
 
@@ -25,10 +27,10 @@ export class WebpackConfigDumpPlugin {
 
   private static getRef(
     config: any,
-    references: Record<string, any>
+    references: Record<string, any>,
   ): any | undefined {
     return Object.keys(references).find(
-      (ref) => references[ref].link === config
+      (ref) => references[ref].link === config,
     );
   }
 
@@ -59,11 +61,11 @@ export class WebpackConfigDumpPlugin {
     config: any,
     depth: number | null,
     includeFalseValues: boolean,
-    showFunctionNames: boolean
+    showFunctionNames: boolean,
   ): string {
     return inspect(
       this.simplifyConfig(config, depth, includeFalseValues, showFunctionNames),
-      { depth }
+      { depth },
     );
   }
 
@@ -71,13 +73,13 @@ export class WebpackConfigDumpPlugin {
     config: any,
     depth: number | null,
     includeFalseValues: boolean,
-    showFunctionNames: boolean
+    showFunctionNames: boolean,
   ) {
     return this.simplifyLevel(
       config,
       depth,
       includeFalseValues,
-      showFunctionNames
+      showFunctionNames,
     );
   }
 
@@ -96,12 +98,12 @@ export class WebpackConfigDumpPlugin {
       config,
       depth,
       this.includeFalseValues,
-      this.showFunctionNames
+      this.showFunctionNames,
     );
     try {
       writeFileSync(
         `${this.outputPath}/${this.name}`,
-        `module.exports = () => (${dump})`
+        `module.exports = () => (${dump})`,
       );
     } catch (err) {
       log.warn("Could not create dump file:", err);
@@ -115,7 +117,7 @@ export class WebpackConfigDumpPlugin {
     showFunctionNames: boolean,
     currentDepth = 0,
     path = "config",
-    references: Record<string, any> = {}
+    references: Record<string, any> = {},
   ) {
     const isDepthFinite = typeof depth === "number";
 
@@ -149,7 +151,7 @@ export class WebpackConfigDumpPlugin {
           showFunctionNames,
           currentDepth + 1,
           `${path}.[${ind}]`,
-          references
+          references,
         );
         if (value || includeFalseValues) {
           res.push(value);
@@ -188,7 +190,7 @@ export class WebpackConfigDumpPlugin {
           showFunctionNames,
           currentDepth + 1,
           `${path}.${key}`,
-          references
+          references,
         );
         if (value || includeFalseValues) {
           res[key] = value;
