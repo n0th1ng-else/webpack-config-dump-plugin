@@ -1,7 +1,7 @@
 {
   "name": "webpack-config-dump-plugin",
   "description": "A webpack plugin to cache compiled webpack config on the file system",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "author": "Sergey Nikitin <srg.post@gmail.com>",
   "license": "MIT",
   "main": "dist/index.js",
@@ -40,7 +40,7 @@
   },
   "scripts": {
     "format": "prettier --write .",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest",
     "coverage": "jest --collect-coverage",
     "test:watch": "jest --watch --silent=false",
